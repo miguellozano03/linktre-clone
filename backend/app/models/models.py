@@ -1,0 +1,45 @@
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, ForeignKey
+from typing import cast
+from app import db
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    nickname: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+
+    links: Mapped[list["Link"]] = relationship("Link", back_populates="user", cascade_all="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "password": self.password,
+            "nickname": self.nickname,
+            "email": self.email,
+            "links": [link.to_dict() for link in list(self.links)]  # pyright: ignore[reportAttributeAccessIssue]
+        }
+    
+class Link(db.Model):
+    __tablename__ = 'links'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    url: Mapped[str] = mapped_column(String(2080), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="links")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "url": self.url,
+            "title": self.title
+        }
+
+
+
