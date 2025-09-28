@@ -14,12 +14,7 @@ class Config:
     DB_PASSWORD = os.getenv("DB_PASSWORD")
     DB_NAME = os.getenv("DB_NAME")
 
-    def get_database_uri(self):
-        if self.DB_USER and self.DB_PASSWORD:
-            return f"{self.DB_MOTOR}+{self.DB_CONNECTOR}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}/{self.DB_NAME}"
-        else:
-            return "sqlite:///db.sqlite3"
-        
-    @property
-    def SQLALCHEMY_DATABASE_URI(self):
-        return self.get_database_uri()
+    if DB_USER and DB_PASSWORD:
+        SQLALCHEMY_DATABASE_URI = f"{DB_MOTOR}+{DB_CONNECTOR}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+    else:
+        SQLALCHEMY_DATABASE_URI = "sqlite:///db.sqlite3"

@@ -12,7 +12,13 @@ class User(db.Model):
     nickname: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
-    links: Mapped[list["Link"]] = relationship("Link", back_populates="user", cascade_all="all, delete-orphan")
+    links: Mapped[list["Link"]] = relationship("Link", back_populates="user", cascade="all, delete-orphan")
+
+    def __init__(self, username, password, nickname, email):
+        self.username = username
+        self.password = password
+        self.nickname = nickname
+        self.email = email
 
     def to_dict(self):
         return {
