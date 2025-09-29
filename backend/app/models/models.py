@@ -7,9 +7,9 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
-    nickname: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    nickname: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     links: Mapped[list["Link"]] = relationship("Link", back_populates="user", cascade="all, delete-orphan")
@@ -39,6 +39,11 @@ class Link(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="links")
+
+    def __init__(self, url, user, title=None):
+        self.url = url
+        self.title = title # type: ignore
+        self.user = user
 
     def to_dict(self):
         return {
