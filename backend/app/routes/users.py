@@ -16,6 +16,24 @@ def get_users():
     users_list = [user.to_dict() for user in users]
     return jsonify(users_list)
 
+@users_bp.route('/users/<string:username>', methods=['GET'])
+def get_user(username: str):
+    """
+    Retrieves an user by username
+    """
+    try: 
+        stmt = select(User).where(User.username == username)
+        result = db.session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if user:
+            return jsonify({"user": user.to_dict()})
+        else:
+            return jsonify({"message": "User not found."}),404
+        
+    except SQLAlchemyError as e:
+        return jsonify({"error": str(e)}), 400
+
 @users_bp.route('/users', methods=['POST'])
 def create_user(): 
     data = request.get_json()
@@ -33,26 +51,57 @@ def create_user():
     except SQLAlchemyError as e:
         return jsonify({"error": str(e)}), 400
     
+@users_bp.route('/users/<string:username>', methods=['PUT'])    
+def replace_user(username: str):
+    data = request.get_json()
+    user = User.query.filter_by(username=username).first()
     
-@users_bp.route('/users/<int:user_id>', methods=['GET'])
-def get_user(user_id: int):
-    try: 
-        stmt = select(User).where(User.id == user_id)
-        result = db.session.execute(stmt)
-        user = result.scalar_one_or_none()
+    if not user:
+        return jsonify({"message": "User not found."}), 404
+    
+    try:
+        user.username = data['username']
+        user.password = data['password']
+        user.nickname = data['nickname']
+        user.email = data['email']
 
-        if user:
-            return jsonify({"user": user.to_dict()})
-        else:
-            return jsonify({"message": "User not found."}),404
+        if 'password' in data:
+            user.password = generate_password_hash(data['password'])
+
         
+        db.session.commit()
+        return jsonify({"message": "User replaced", "user": user.to_dict()})
+    
+    except SQLAlchemyError as e:
+        return jsonify({"error": str(e)}), 400
+
+@users_bp.route('/users/<string:username>', methods=['PATCH'])
+def edit_user(username: str):
+    data = request.get_json()
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    
+    try:
+        if "username" in data:
+            user.username = data["username"]
+        if "password" in data:
+            user.password = generate_password_hash(data['password'])
+        if "nickname" in data:
+            user.nickname = data["nickname"]
+        if "email" in data:
+            user.email = data["email"]
+        db.session.commit()
+        return jsonify({"message": "User updated.", "user": user.to_dict()})
+    
     except SQLAlchemyError as e:
         return jsonify({"error": str(e)}), 400
     
-@users_bp.route('/users/<int:user_id>', methods=['DELETE'])
-def delete_user(user_id: int):
+@users_bp.route('/users/<string:username>', methods=['DELETE'])
+def delete_user(username: str):
     try:
-        stmt = select(User).where(User.id == user_id)
+        stmt = select(User).where(User.username == username)
         result = db.session.execute(stmt)
         user = result.scalar_one_or_none()
         
