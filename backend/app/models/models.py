@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey
-from app import db
+from sqlalchemy import String, ForeignKey, Enum as SQLEnum
+from ..config import db
+from .roles import UserRole
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -10,6 +11,7 @@ class User(db.Model):
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     nickname: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole), nullable=False, default=UserRole.USER)
 
     links: Mapped[list["Link"]] = relationship("Link", back_populates="user", cascade="all, delete-orphan")
 
@@ -50,6 +52,3 @@ class Link(db.Model):
             "url": self.url,
             "title": self.title
         }
-
-
-

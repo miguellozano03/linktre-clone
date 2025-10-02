@@ -1,3 +1,5 @@
+from typing import cast
+
 from ..config.database import db
 from ..models.models import User
 from ..utils.security import hash_password
