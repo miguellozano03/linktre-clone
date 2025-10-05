@@ -25,7 +25,7 @@ class User(db.Model):
         return {
             "id": self.id,
             "username": self.username,
-            "password": self.password,
+            # "password": self.password,
             "nickname": self.nickname,
             "email": self.email,
             "links": [link.to_dict() for link in list(self.links)]  # pyright: ignore[reportAttributeAccessIssue]

@@ -1,12 +1,9 @@
 from .service import get_all_users, get_user, create_user, update_user, delete_user
 from ..models import UserRole
-from ..schemas.schemas import UserSchema
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy.exc import SQLAlchemyError
-from marshmallow import ValidationError
-
-user_schema = UserSchema()
 
 users_bp = Blueprint('users_bp', __name__)
 
@@ -29,7 +26,7 @@ def get_users_endpoint():
     return jsonify(get_all_users())
 
 
-@users_bp.route('/users/<string:username>', methods=['GET'])
+@users_bp.route('/users/@<string:username>', methods=['GET'])
 def get_user_endpoint(username: str):
     """
     Show a User by username
@@ -43,22 +40,28 @@ def get_user_endpoint(username: str):
 @users_bp.route('/users', methods=['POST'])
 def create_user_endpoint():
     try:
-        # Obtener JSON y validar que sea un diccionario
         json_data = request.get_json()
         if not isinstance(json_data, dict):
             return jsonify({"error": "Invalid JSON"}), 400
 
-        # Validar y deserializar con Marshmallow
-        payload: dict = user_schema.load(json_data)
-        
-        # Llamar al servicio que crea el usuario
-        new_user = create_user(payload)
+        # Validación manual mínima
+        required_fields = ["username", "password", "nickname", "email"]
+        for f in required_fields:
+            if f not in json_data:
+                return jsonify({"error": f"Missing field: {f}"}), 400
 
-        # Serializar la respuesta
-        return user_schema.dump(new_user), 201
+        # Crear usuario llamando al servicio
+        new_user = create_user(json_data)
 
-    except ValidationError as err:
-        return jsonify({"errors": err.messages}), 400
+        # Serializar a dict sin Marshmallow
+        return jsonify({
+            "id": new_user.id,
+            "username": new_user.username,
+            "nickname": new_user.nickname,
+            "email": new_user.email,
+            "role": new_user.role.value
+        }), 201
+
     except SQLAlchemyError as e:
         return jsonify({"error": str(e)}), 400
 
